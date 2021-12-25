@@ -81,19 +81,35 @@ gcafb gcf dcaebfg ecagb gf abcdeg gaef cafbge fdbac fegbdc | fgae cfgab fg bagce
 
 (read-input-file "resources/puzzle8.txt")
 
-(parse-input-after-pipe-joined (read-input-file "resources/puzzle8.txt"))
+(->> "resources/puzzle8.txt"
+     read-input-file
+     parse-input-after-pipe-joined)
 
-(parse-input-after-pipe-joined (read-input-file "resources/puzzle8.txt"))
+(->> "resources/puzzle8.txt"
+     read-input-file
+     parse-input-after-pipe-joined)
+
 (->>
- (parse-input-after-pipe-joined (read-input-file "resources/puzzle8.txt"))
+ "resources/puzzle8.txt"
+ (read-input-file)
+ (parse-input-after-pipe-joined)
  (map #(is-digit? %))
  (apply +)
  (prn "Part 1:"))
 
-
 ;; part2
 
-(def demo [["acedgfb" "cdfbe" "gcdfa" "fbcad" "dab" "cefabd" "cdfgeb" "eafb" "cagedb" "ab" "|" "cdfeb" "fcadb" "cdfeb" "cdbaf"]])
+(def demo [["acedgfb"
+            "cdfbe"
+            "gcdfa"
+            "fbcad"
+            "dab"
+            "cefabd"
+            "cdfgeb"
+            "eafb"
+            "cagedb"
+            "ab"
+            "|" "cdfeb" "fcadb" "cdfeb" "cdbaf"]])
 
 (defn find-by-length
   [entries length]
@@ -127,36 +143,55 @@ gcafb gcf dcaebfg ecagb gf abcdeg gaef cafbge fdbac fegbdc | fgae cfgab fg bagce
   [entries]
   (set (find-by-length entries 6)))
 
+(defn is-digit-9?
+  [digit digit-4]
+  (let [diff (cset/difference (set digit) digit-4)]
+    (= (count diff) 2)))
+
 (defn find-digit-9
   [entries digit-4]
-  (let [digit-9 (first (filter #(= (count (cset/difference (set %) digit-4)) 2) entries))]
-    [(sort-string-alphabetically digit-9)
-     (filter #(not= % digit-9) entries)]))
+  (let [digit-9 (first (filter #(is-digit-9? % digit-4) entries))
+        rest-digits (filter #(not= % digit-9) entries)]
+    [digit-9 rest-digits]))
+
+(defn is-digit-0?
+  [digit-1 first-digit]
+  (let [diff (cset/difference first-digit digit-1)]
+    (= (count diff) 4)))
 
 (defn find-digit-0
   [digits-6-or-0 digit-1]
   (let [first-digit (set (first digits-6-or-0))
         second-digit (set (second digits-6-or-0))
-        result (if (= (count (cset/difference first-digit digit-1)) 4)
-                 [first-digit second-digit]
-                 [second-digit first-digit])]
-    (map #(str/join %) result)))
+        [digit-0 digit-6] (if (is-digit-0? digit-1 first-digit)
+                            [first-digit second-digit]
+                            [second-digit first-digit])]
+    (map #(str/join %) [digit-0 digit-6])))
+
+(defn is-digit-3?
+  [digit digit-1]
+  (let [diff (cset/difference (set digit) digit-1)]
+    (= (count diff) 3)))
 
 (defn find-digit-3
   [entries digit-1]
-  (let [digit-3 (first (filter #(= (count (cset/difference (set %) digit-1)) 3) entries))]
-    [digit-3
-     (filter #(not= % digit-3) entries)]))
+  (let [digit-3 (first (filter #(is-digit-3? % digit-1) entries))
+        rest-digits (filter #(not= % digit-3) entries)]
+    [digit-3 rest-digits]))
+
+(defn is-digit-5?
+  [first-digit digit-6]
+  (let [diff (cset/difference first-digit (set digit-6))]
+    (= (count diff) 0)))
 
 (defn find-digit-5
   [digits-5-or-2 digit-6]
   (let [first-digit (set (first digits-5-or-2))
         second-digit (set (second digits-5-or-2))
-        result (if (= (count (cset/difference first-digit (set digit-6))) 0)
-                 [first-digit second-digit]
-                 [second-digit first-digit])]
-    (map #(str/join #"" %) result)))
-
+        [digit-5 digit-2] (if (is-digit-5? first-digit digit-6)
+                            [first-digit second-digit]
+                            [second-digit first-digit])]
+    (map #(str/join #"" %) [digit-5 digit-2])))
 
 (defn decode
   [entries]

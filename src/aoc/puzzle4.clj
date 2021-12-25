@@ -226,4 +226,7 @@
                  (eval-draws-for-game draw game))
                update-bingo-set)))))
 
-(time (play-to-the-end (map-draws game-data) (map-games game-data)))
+(time
+ (play-to-the-end
+  (map-draws game-data)
+  (map-games game-data)))
