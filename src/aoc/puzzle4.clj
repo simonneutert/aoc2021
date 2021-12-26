@@ -176,21 +176,19 @@
 
 ;; execution part1
 
-;; run part1
 (time
- (->
-  (filter #(:id %) (play (map-draws game-data) (map-games game-data)))
-  (first)
-  (evaluate-bingo-game)))
+ (->> (play (map-draws game-data) (map-games game-data))
+      (filter #(:id %))
+      (first)
+      (evaluate-bingo-game)))
 
 ;; part2
 
 (defn find-game-by-id
   [bingo id]
-  (->>
-   bingo
-   (filter #(= (:id %) (first id)))
-   (first)))
+  (->> bingo
+       (filter #(= (:id %) (first id)))
+       (first)))
 
 (defn evaluate-last-finished-bingo-game
   [bingo last-bingo-game-won-id]
@@ -202,12 +200,19 @@
 
 (defn extract-game-id
   [bingo]
-  (->>
-   bingo
-   (filter #(:id %))
-   (map (fn [game] (:id game)))))
+  (->> bingo
+       (filter #(:id %))
+       (map (fn [game] (:id game)))))
 
-(defn play-to-the-end
+(defn last-game-settled?
+  [games bingo-set]
+  (= (count games) (count bingo-set)))
+
+(defn evaluate-draw-in-games
+  [games draw]
+  (for [game games] (eval-draws-for-game draw game)))
+
+(defn play-all-draws
   [draws games-mapped]
   (loop [draws draws
          games games-mapped
@@ -219,14 +224,12 @@
           last-bingo-game-won-id (cset/difference bingo-set last-bingo)]
       (cond
         (no-draws-left draw) "no bingo"
-        (= (count bingo-set) (count games)) (evaluate-last-finished-bingo-game bingo last-bingo-game-won-id)
-        :else (recur
-               (drop 1 draws)
-               (for [game games]
-                 (eval-draws-for-game draw game))
-               update-bingo-set)))))
+        (last-game-settled? games bingo-set) (evaluate-last-finished-bingo-game bingo last-bingo-game-won-id)
+        :else (recur (drop 1 draws)
+                     (evaluate-draw-in-games games draw)
+                     update-bingo-set)))))
 
 (time
- (play-to-the-end
+ (play-all-draws
   (map-draws game-data)
   (map-games game-data)))
