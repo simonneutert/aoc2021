@@ -14,10 +14,17 @@
   (-> (fn [elem] (str/split elem #" "))
       (map (line-seq (io/reader "resources/puzzle2.txt")))))
 
+(defn format-input-values
+  [elem]
+  (let [strkey (first elem)
+        intval (second elem)]
+    [(str/trim strkey)
+     (Integer/parseInt intval)]))
+
 (defn input-values-parsed
   [list-of-commands]
   (->> list-of-commands
-       (map (fn [elem] [(str/trim (first elem)) (Integer/parseInt (second elem))]))))
+       (map #(format-input-values %))))
 
 ;; part1
 
@@ -35,11 +42,13 @@
 ;; execution part1
 
 (time
- (prn
-  (->>
-   input-values
-   (input-values-parsed)
-   (position-from-commands 0 0))))
+ (let
+  [result (->>
+           input-values
+           (input-values-parsed)
+           (position-from-commands 0 0))]
+   (prn "Part 1 " result)
+   result))
 
 ;; part2
 
@@ -59,11 +68,13 @@
 
 ;; execution part2
 
-(time
- (position-from-commands-with-aim 0 0 0 demo))
+#_(time
+   (position-from-commands-with-aim 0 0 0 demo))
 
 (time
- (->>
-  input-values
-  (input-values-parsed)
-  (position-from-commands-with-aim 0 0 0)))
+ (let [result (->>
+               input-values
+               (input-values-parsed)
+               (position-from-commands-with-aim 0 0 0))]
+   (prn "Part 2 " result)
+   result))

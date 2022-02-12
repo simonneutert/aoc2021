@@ -4,6 +4,19 @@
    [clojure.set :as cset]
    [clojure.java.io :as io]))
 
+(defn create-empty-bingo-game-mask
+  "Creates a vector bool mask m by n matrix, default value is false"
+  [m n]
+  (->>
+   false
+   (repeat m)
+   (repeat n)
+   (mapv #(into [] %))))
+
+(def empty-bingo-game-mask
+  "Cached 5x5 empty bool mask"
+  (create-empty-bingo-game-mask 5 5))
+
 (def input-values
   (line-seq (io/reader "resources/puzzle4.txt")))
 
@@ -59,15 +72,6 @@
     (for [entry matrix]
       (nth entry i))))
 
-
-(defn empty-bingo-game-mask
-  []
-  [[false false false false false]
-   [false false false false false]
-   [false false false false false]
-   [false false false false false]
-   [false false false false false]])
-
 ;; Part 1
 
 (def game-data (extract-draws-and-games input-values))
@@ -78,8 +82,8 @@
    :columns (transpose-matrix game)
    :score (reduce + (flatten game))
    :draws []
-   :hits-row (empty-bingo-game-mask)
-   :hits-column (empty-bingo-game-mask)})
+   :hits-row empty-bingo-game-mask
+   :hits-column empty-bingo-game-mask})
 
 (defn map-draws
   [game-data]
@@ -95,11 +99,9 @@
 (defn draw-in-game
   "Return Row/Columns as Boolean Mask where a hit was matched"
   [draw rows-or-columns]
-  (map (fn [row]
-         (map (fn [entry]
-                filter (= entry draw))
-              row))
-       rows-or-columns))
+  (->
+   #(map (fn [entry] filter (= entry draw)) %)
+   (map rows-or-columns)))
 
 (defn apply-bool-mask
   "applies a boolean mask to entries in a matrix"
@@ -192,7 +194,9 @@
 
 (defn evaluate-last-finished-bingo-game
   [bingo last-bingo-game-won-id]
-  (evaluate-bingo-game (find-game-by-id bingo last-bingo-game-won-id)))
+  (->
+   (find-game-by-id bingo last-bingo-game-won-id)
+   (evaluate-bingo-game)))
 
 (defn no-draws-left
   [draw]
@@ -201,8 +205,7 @@
 (defn extract-game-id
   [bingo]
   (->> bingo
-       (filter #(:id %))
-       (map (fn [game] (:id game)))))
+       (map #(:id %))))
 
 (defn last-game-settled?
   [games bingo-set]
@@ -219,7 +222,7 @@
          last-bingo #{}]
     (let [draw (first draws)
           bingo (game-bingo games)
-          bingo-set (set (extract-game-id bingo))
+          bingo-set (set (extract-game-id (filter #(:id %) bingo)))
           update-bingo-set (cset/union last-bingo bingo-set)
           last-bingo-game-won-id (cset/difference bingo-set last-bingo)]
       (cond
