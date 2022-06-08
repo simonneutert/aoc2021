@@ -1,4 +1,4 @@
-(ns aoc.puzzle3
+(ns aoc.puzzle4
   (:require
    [clojure.string :as str]
    [clojure.set :as cset]
