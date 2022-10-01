@@ -14,12 +14,14 @@
 
 (def input-values
   (->>
-   (line-seq (io/reader "resources/puzzle1.txt"))
-   (map #(Integer/parseInt %))))
+   (slurp "resources/puzzle1.txt")
+   (clojure.string/split-lines)
+   (pmap #(Integer/parseInt %))))
 
 ;; part1
 
-(defn boolean->int [val]
+(defn boolean->int
+  [val]
   (get {true 1 false 0} val))
 
 (defn check-value-2
